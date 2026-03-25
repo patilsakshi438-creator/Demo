@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders registration form heading', () => {
+test('renders separate registration and login forms', () => {
   render(<App />);
-  const headingElement = screen.getByText(/create account/i);
-  expect(headingElement).toBeInTheDocument();
+  expect(screen.getByText(/create account/i)).toBeInTheDocument();
+  expect(screen.getByText(/sign in/i)).toBeInTheDocument();
 });

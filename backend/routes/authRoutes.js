@@ -4,12 +4,27 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const router = express.Router();
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function normalizeEmail(email = '') {
+  return email.trim().toLowerCase();
+}
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
+  const trimmedName = name ? name.trim() : '';
+  const normalizedEmail = normalizeEmail(email);
 
-  if (!name || !email || !password) {
+  if (!trimmedName || !normalizedEmail || !password) {
     return res.status(400).json({ message: 'All fields are required.' });
+  }
+
+  if (trimmedName.length < 3) {
+    return res.status(400).json({ message: 'Full name must be at least 3 characters long.' });
+  }
+
+  if (!emailPattern.test(normalizedEmail)) {
+    return res.status(400).json({ message: 'Please enter a valid email address.' });
   }
 
   if (password.length < 6) {
@@ -17,7 +32,7 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
       return res.status(409).json({ message: 'User already exists with this email.' });
@@ -26,8 +41,8 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase(),
+      name: trimmedName,
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
@@ -46,13 +61,26 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
+  const normalizedEmail = normalizeEmail(email);
 
-  if (!email || !password) {
+  if (!normalizedEmail || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
 
+  if (!emailPattern.test(normalizedEmail)) {
+    return res.status(400).json({ message: 'Please enter a valid email address.' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+  }
+
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({ message: 'JWT secret is not configured on the server.' });
+  }
+
   try {
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
