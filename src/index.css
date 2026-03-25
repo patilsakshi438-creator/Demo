@@ -1,6 +1,7 @@
 :root {
   color-scheme: light;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  background: #f4efe6;
 }
 
 * {
@@ -12,6 +13,7 @@ body {
   min-width: 320px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #f4efe6;
 }
 
 button,

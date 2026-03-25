@@ -1,70 +1,90 @@
-# Getting Started with Create React App
+# MERN Auth Demo
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project contains a React frontend and an Express + MongoDB backend for a simple authentication flow.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Separate register and login forms in the React UI
+- Client-side validation with inline field errors
+- Express auth routes for `/api/auth/register` and `/api/auth/login`
+- Server-side request validation and normalized email handling
+- Password hashing with `bcryptjs`
+- MongoDB persistence with Mongoose
+- JWT generation on successful login
 
-### `npm start`
+## Frontend setup
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+In the project root:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+npm install
+npm start
+```
 
-### `npm test`
+The frontend runs on `http://localhost:3000` and expects the backend API at `http://localhost:5000/api` by default.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+You can override the frontend API target with:
 
-### `npm run build`
+```bash
+REACT_APP_API_URL=http://localhost:5000/api
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Backend setup
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Inside [`backend`](/e:/DemoProject/demo/backend):
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+npm install
+```
 
-### `npm run eject`
+Create a `.env` file in `backend` with:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```env
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/auth-demo
+JWT_SECRET=replace-with-a-secure-secret
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Then start the server:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+cd backend
+npm run dev
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## API
 
-## Learn More
+### `POST /api/auth/register`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Request body:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```json
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "secret123"
+}
+```
 
-### Code Splitting
+### `POST /api/auth/login`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Request body:
 
-### Analyzing the Bundle Size
+```json
+{
+  "email": "ada@example.com",
+  "password": "secret123"
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Successful login returns a JWT token and the user profile.
 
-### Making a Progressive Web App
+## Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- Root: `npm start`, `npm test`, `npm run build`
+- Backend: `npm start`, `npm run dev`
 
-### Advanced Configuration
+## Notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- The backend exits early if `MONGODB_URI` is missing.
+- The login route also requires `JWT_SECRET`.

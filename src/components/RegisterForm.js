@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { registerUser } from '../utils/authApi';
 import { validateRegisterForm } from '../utils/validation';
 
 const initialRegisterState = {
@@ -9,6 +10,7 @@ const initialRegisterState = {
 
 function RegisterForm({ apiBaseUrl, onRegisterSuccess }) {
   const [form, setForm] = useState(initialRegisterState);
+  const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,17 +20,28 @@ function RegisterForm({ apiBaseUrl, onRegisterSuccess }) {
       ...current,
       [name]: value,
     }));
+    setErrors((current) => {
+      if (!current[name]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validationMessage = validateRegisterForm(form);
-    if (validationMessage) {
-      setStatus({ type: 'error', message: validationMessage });
+    const nextErrors = validateRegisterForm(form);
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      setStatus({ type: 'error', message: 'Please fix the highlighted fields and try again.' });
       return;
     }
 
+    setErrors({});
     setStatus({ type: '', message: '' });
     setIsSubmitting(true);
 
@@ -39,19 +52,7 @@ function RegisterForm({ apiBaseUrl, onRegisterSuccess }) {
         password: form.password,
       };
 
-      const response = await fetch(`${apiBaseUrl}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed.');
-      }
+      const data = await registerUser(apiBaseUrl, payload);
 
       setStatus({ type: 'success', message: data.message });
       setForm(initialRegisterState);
@@ -79,9 +80,11 @@ function RegisterForm({ apiBaseUrl, onRegisterSuccess }) {
         placeholder="Enter your full name"
         value={form.name}
         onChange={handleChange}
+        aria-invalid={Boolean(errors.name)}
         minLength="3"
         required
       />
+      {errors.name ? <p className="field-message error">{errors.name}</p> : null}
 
       <label htmlFor="register-email">Email address</label>
       <input
@@ -91,8 +94,10 @@ function RegisterForm({ apiBaseUrl, onRegisterSuccess }) {
         placeholder="Enter your email"
         value={form.email}
         onChange={handleChange}
+        aria-invalid={Boolean(errors.email)}
         required
       />
+      {errors.email ? <p className="field-message error">{errors.email}</p> : null}
 
       <label htmlFor="register-password">Password</label>
       <input
@@ -102,9 +107,11 @@ function RegisterForm({ apiBaseUrl, onRegisterSuccess }) {
         placeholder="Create a password"
         value={form.password}
         onChange={handleChange}
+        aria-invalid={Boolean(errors.password)}
         minLength="6"
         required
       />
+      {errors.password ? <p className="field-message error">{errors.password}</p> : null}
 
       {status.message ? (
         <p className={`status-message ${status.type}`}>{status.message}</p>

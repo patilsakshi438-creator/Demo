@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { loginUser } from '../utils/authApi';
 import { validateLoginForm } from '../utils/validation';
 
 const initialLoginState = {
@@ -11,6 +12,7 @@ function LoginForm({ apiBaseUrl, registeredEmail = '', onLoginSuccess }) {
     ...initialLoginState,
     email: registeredEmail,
   });
+  const [errors, setErrors] = useState({});
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -20,6 +22,15 @@ function LoginForm({ apiBaseUrl, registeredEmail = '', onLoginSuccess }) {
       ...current,
       [name]: value,
     }));
+    setErrors((current) => {
+      if (!current[name]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -36,12 +47,14 @@ function LoginForm({ apiBaseUrl, registeredEmail = '', onLoginSuccess }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const validationMessage = validateLoginForm(form);
-    if (validationMessage) {
-      setStatus({ type: 'error', message: validationMessage });
+    const nextErrors = validateLoginForm(form);
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      setStatus({ type: 'error', message: 'Please fix the highlighted fields and try again.' });
       return;
     }
 
+    setErrors({});
     setStatus({ type: '', message: '' });
     setIsSubmitting(true);
 
@@ -51,19 +64,7 @@ function LoginForm({ apiBaseUrl, registeredEmail = '', onLoginSuccess }) {
         password: form.password,
       };
 
-      const response = await fetch(`${apiBaseUrl}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed.');
-      }
+      const data = await loginUser(apiBaseUrl, payload);
 
       setStatus({ type: 'success', message: `${data.message} Token generated successfully.` });
       setForm(initialLoginState);
@@ -91,8 +92,10 @@ function LoginForm({ apiBaseUrl, registeredEmail = '', onLoginSuccess }) {
         placeholder="Enter your email"
         value={form.email}
         onChange={handleChange}
+        aria-invalid={Boolean(errors.email)}
         required
       />
+      {errors.email ? <p className="field-message error">{errors.email}</p> : null}
 
       <label htmlFor="login-password">Password</label>
       <input
@@ -102,9 +105,11 @@ function LoginForm({ apiBaseUrl, registeredEmail = '', onLoginSuccess }) {
         placeholder="Enter your password"
         value={form.password}
         onChange={handleChange}
+        aria-invalid={Boolean(errors.password)}
         minLength="6"
         required
       />
+      {errors.password ? <p className="field-message error">{errors.password}</p> : null}
 
       {status.message ? (
         <p className={`status-message ${status.type}`}>{status.message}</p>

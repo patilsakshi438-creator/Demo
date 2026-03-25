@@ -1,49 +1,55 @@
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function buildErrorState(entries) {
+  return Object.fromEntries(entries.filter(([, value]) => value));
+}
+
 export function validateRegisterForm(form) {
-  if (!form.name.trim()) {
-    return 'Full name is required.';
-  }
-
-  if (form.name.trim().length < 3) {
-    return 'Full name must be at least 3 characters long.';
-  }
-
-  if (!form.email.trim()) {
-    return 'Email address is required.';
-  }
-
-  if (!emailPattern.test(form.email.trim())) {
-    return 'Please enter a valid email address.';
-  }
-
-  if (!form.password) {
-    return 'Password is required.';
-  }
-
-  if (form.password.length < 6) {
-    return 'Password must be at least 6 characters long.';
-  }
-
-  return '';
+  return buildErrorState([
+    [
+      'name',
+      !form.name.trim()
+        ? 'Full name is required.'
+        : form.name.trim().length < 3
+          ? 'Full name must be at least 3 characters long.'
+          : '',
+    ],
+    [
+      'email',
+      !form.email.trim()
+        ? 'Email address is required.'
+        : !emailPattern.test(form.email.trim())
+          ? 'Please enter a valid email address.'
+          : '',
+    ],
+    [
+      'password',
+      !form.password
+        ? 'Password is required.'
+        : form.password.length < 6
+          ? 'Password must be at least 6 characters long.'
+          : '',
+    ],
+  ]);
 }
 
 export function validateLoginForm(form) {
-  if (!form.email.trim()) {
-    return 'Email address is required.';
-  }
-
-  if (!emailPattern.test(form.email.trim())) {
-    return 'Please enter a valid email address.';
-  }
-
-  if (!form.password) {
-    return 'Password is required.';
-  }
-
-  if (form.password.length < 6) {
-    return 'Password must be at least 6 characters long.';
-  }
-
-  return '';
+  return buildErrorState([
+    [
+      'email',
+      !form.email.trim()
+        ? 'Email address is required.'
+        : !emailPattern.test(form.email.trim())
+          ? 'Please enter a valid email address.'
+          : '',
+    ],
+    [
+      'password',
+      !form.password
+        ? 'Password is required.'
+        : form.password.length < 6
+          ? 'Password must be at least 6 characters long.'
+          : '',
+    ],
+  ]);
 }
